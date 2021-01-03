@@ -1,24 +1,22 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter, NavLink, Route} from 'react-router-dom';
 import Cart from './Cart';
 import Select from './Select';
 import Table from './Table';
 
-class Main extends Component {
+function Main () {
 
-    constructor(props) {
-        super(props);
+    const selectDefault = "-1"
 
-        this.state = {
-            selA: "-1",
-            selB: "-1",
-            optionsA: this.data.map((ele) => ele.name),
-            optionsB: [],
-            cart: []
-        }
-    }
+    const [selA, setStateSelA] = useState (selectDefault)
+    const [selB, setStateSelB] = useState (selectDefault)
+    const [optionsB, setStateOptionsB] = useState ([])
+    const [cart, setStateCart] = useState ([])
 
-    data = [
+    // eslint-disable-next-line 
+    useEffect(() => {setOptionsB()}, [selA])
+
+    const data = [
         {
             "name": "Entertainment",
             "gruppe": [
@@ -188,82 +186,57 @@ class Main extends Component {
         }
     ]
 
-    setOptionsB = () => {
-        (this.state.selA !== "-1") && (this.setState({
-            optionsB: this.data[this.state.selA].gruppe.map((ele) => ele.name),
-        }))
-        this.setState({selB: "-1"})
+    const optionsA = data.map((ele) => ele.name)
+
+    let setOptionsB = () => {
+        (selA !== selectDefault) && (setStateOptionsB(data[selA].gruppe.map((ele) => ele.name)))
+        setStateSelB(selectDefault)
     }
 
-    setSelA = (event) => {
-        this.setState({
-            selA: event.target.value
-        }, this.setOptionsB)
-    }
-
-    setSelB = (event) => {
-        this.setState({
-            selB: event.target.value
-        })
-    }
-
-
+    let setSelA = event => setStateSelA(event.target.value)
+    let setSelB = event => setStateSelB(event.target.value)
 
     /* adds an item to the cart */
-    addToCart = (index) => {
-        let item = this.data[this.state.selA].gruppe[this.state.selB].artikel[index]
-        let newCart = [...this.state.cart]
-        newCart.push({
+    let addToCart = (index) => {
+        let item = data[selA].gruppe[selB].artikel[index]
+        setStateCart((oldCart) => [...oldCart].push({
             'Name': item.titel,
             'Preis': item.preis
-        })
-        this.setState({
-            cart: newCart
-        })
+        }))
     }
 
     /* removes an item from the cart array by the index*/
-    removeFromCart = (index) => {
-        let newCart = [...this.state.cart]
-        newCart.splice(index, 1)
-        this.setState({
-            cart: [...newCart]
-        })
-    }
+    let removeFromCart = index => setStateCart((oldCart) => [...oldCart].splice(index, 1))
 
-    render() {
-        let s = this.state
-        return (
-            <BrowserRouter>
-                <>
-                    <header>
-                        <h1>Bücher und Mehr</h1>
-                    </header>
-                    <nav className="clearfix">
-                        <NavLink to="/shop"><div>Shop</div></NavLink>
-                        <NavLink to="/cart"><div>Warenkorb ({s.cart.length})</div></NavLink>
-                    </nav>
-                    <main>
-                        <Route path="/shop" exact render={() => (<Select    valueA={s.selA} 
-                                                                            valueB={s.selB}
-                                                                            optionsA={s.optionsA} 
-                                                                            optionsB={s.optionsB} 
-                                                                            changeA={this.setSelA} 
-                                                                            changeB={this.setSelB} />)} />
-                        {(s.selA !== "-1" && s.selB !== "-1") &&
-                            <Route path="/shop" exact render={() => (
-                               <Table   data={this.data[s.selA].gruppe[s.selB].artikel} 
-                                        clickFunction={this.addToCart} 
-                                        clickText={"Hinzufügen"} />
-                            )} />}
-                        <Route path="/cart" exact render={() => (
-                            <Cart cart={s.cart} clickFunction={this.removeFromCart} clickText={"Entfernen"} />
-                        )} />
-                    </main>
-                </>
-            </BrowserRouter>
-        );
-    }
+    return (
+        <BrowserRouter>
+            <>
+                <header>
+                    <h1>Bücher und Mehr</h1>
+                </header>
+                <nav className="clearfix">
+                    <NavLink to="/shop"><div>Shop</div></NavLink>
+                    <NavLink to="/cart"><div>Warenkorb ({cart.length})</div></NavLink>
+                </nav>
+                <main>
+                    <Route path="/shop" exact render={() => (<Select    valueA={selA} 
+                                                                        valueB={selB}
+                                                                        optionsA={optionsA} 
+                                                                        optionsB={optionsB} 
+                                                                        changeA={setSelA} 
+                                                                        changeB={setSelB} />)} />
+                    {(selA !== selectDefault && selB !== selectDefault) &&
+                        <Route path="/shop" exact render={() => (
+                            <Table   data={data[selA].gruppe[selB].artikel} 
+                                    clickFunction={addToCart} 
+                                    clickText={"Hinzufügen"} />
+                        )} />}
+                    <Route path="/cart" exact render={() => (
+                        <Cart cart={cart} clickFunction={removeFromCart} clickText={"Entfernen"} />
+                    )} />
+                </main>
+            </>
+        </BrowserRouter>
+    );
 }
-
 export default Main;
