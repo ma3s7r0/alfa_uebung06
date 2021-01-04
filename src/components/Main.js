@@ -3,18 +3,22 @@ import { BrowserRouter, NavLink, Route} from 'react-router-dom';
 import Cart from './Cart';
 import Select from './Select';
 import Table from './Table';
+import useLocalStorageState from "use-local-storage-state";
+
 
 function Main () {
 
+    //default value for select elements
     const selectDefault = "-1"
 
+    // initialize the values we need in states
     const [selA, setStateSelA] = useState (selectDefault)
     const [selB, setStateSelB] = useState (selectDefault)
     const [optionsB, setStateOptionsB] = useState ([])
-    const [cart, setStateCart] = useState ([])
+    const [cart, setStateCart] = useLocalStorageState ('cart', [])
 
     // eslint-disable-next-line 
-    useEffect(() => {setOptionsB()}, [selA])
+    useEffect(() => {setOptionsB()}, [selA])  
 
     const data = [
         {
@@ -189,24 +193,30 @@ function Main () {
     const optionsA = data.map((ele) => ele.name)
 
     let setOptionsB = () => {
+        // RaceCondition? if list of options is not ready when user tries to click?
         (selA !== selectDefault) && (setStateOptionsB(data[selA].gruppe.map((ele) => ele.name)))
         setStateSelB(selectDefault)
     }
 
+    // EventHandlers for the two DropDownBoxes
     let setSelA = event => setStateSelA(event.target.value)
     let setSelB = event => setStateSelB(event.target.value)
 
-    /* adds an item to the cart */
+    // adds an item to the cart 
     let addToCart = (index) => {
         let item = data[selA].gruppe[selB].artikel[index]
-        setStateCart((oldCart) => [...oldCart].push({
+        setStateCart([...cart, {
             'Name': item.titel,
             'Preis': item.preis
-        }))
+        }])
     }
 
-    /* removes an item from the cart array by the index*/
-    let removeFromCart = index => setStateCart((oldCart) => [...oldCart].splice(index, 1))
+    // removes an item from the cart array by the index
+    let removeFromCart = index => {
+        let newCart = [...cart]
+        newCart.splice(index, 1)
+        setStateCart(newCart)
+    }
 
     return (
         <BrowserRouter>
