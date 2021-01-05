@@ -10,17 +10,8 @@ function Main () {
 
     //default value for select elements
     const selectDefault = "-1"
-
-    // initialize the values we need in states
-    const [selA, setStateSelA] = useState (selectDefault)
-    const [selB, setStateSelB] = useState (selectDefault)
-    const [optionsB, setStateOptionsB] = useState ([])
-    const [cart, setStateCart] = useLocalStorageState ('cart', [])
-
-    // eslint-disable-next-line 
-    useEffect(() => {setOptionsB()}, [selA])  
-
-    const data = [
+    
+    const defaultData = [
         {
             "name": "Entertainment",
             "gruppe": [
@@ -190,32 +181,37 @@ function Main () {
         }
     ]
 
+    // initialize the values we need in states
+    const [selA, setStateSelA] = useState (selectDefault)
+    const [selB, setStateSelB] = useState (selectDefault)
+    const [optionsB, setStateOptionsB] = useState ([])
+    const [cart, setStateCart] = useLocalStorageState ('cart', [])
+    const [data, setData] = useLocalStorageState('data', defaultData)
+
+    // eslint-disable-next-line 
+    useEffect(() => setOptionsB(), [selA])
+
     const optionsA = data.map((ele) => ele.name)
 
-    let setOptionsB = () => {
-        // RaceCondition? if list of options is not ready when user tries to click?
-        (selA !== selectDefault) && (setStateOptionsB(data[selA].gruppe.map((ele) => ele.name)))
-        setStateSelB(selectDefault)
-    }
+    let setOptionsB = () => (selA !== selectDefault) && setStateOptionsB(data[selA].gruppe.map((ele) => ele.name))
 
     // EventHandlers for the two DropDownBoxes
-    let setSelA = event => setStateSelA(event.target.value)
+    let setSelA = event => {
+        setStateSelB(selectDefault)
+        setStateSelA(event.target.value)
+    }
+    
     let setSelB = event => setStateSelB(event.target.value)
 
     // adds an item to the cart 
     let addToCart = (index) => {
         let item = data[selA].gruppe[selB].artikel[index]
-        setStateCart([...cart, {
-            'Name': item.titel,
-            'Preis': item.preis
-        }])
+        setStateCart( [ ...cart, { 'Name': item.titel, 'Preis': item.preis } ])
     }
 
     // removes an item from the cart array by the index
     let removeFromCart = index => {
-        let newCart = [...cart]
-        newCart.splice(index, 1)
-        setStateCart(newCart)
+        setStateCart([...cart].filter((item, i) => i !== index))
     }
 
     return (
